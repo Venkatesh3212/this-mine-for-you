@@ -105,6 +105,12 @@ body.booking .bg{filter:blur(7px)}
 .calgrid button.sel{background:var(--rose);color:#fff}
 .calgrid i{display:block}
 .face.front .primary{margin-top:10px;font-size:15px;padding:10px 22px;align-self:center}
+
+.calnav{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.calnav select{flex:1;min-width:0;font:inherit;font-weight:800;font-size:16px;padding:10px 14px;border-radius:999px;border:2px solid var(--soft);background:transparent;color:var(--ink)}
+.calnav select option{background:var(--card);color:var(--ink)}
+.calnav button{width:42px;height:42px;padding:0;border-radius:50%;background:var(--soft);color:var(--ink);box-shadow:none;font-size:24px;line-height:1}
+.calnav button:disabled{opacity:.3;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -221,23 +227,28 @@ body.booking .bg{filter:blur(7px)}
   });
 
 
-  // Calendar: current month + next two (Nov, Dec, Jan right now)
+  // Calendar: from this month until December 2027
   var MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
   var WD=['Mo','Tu','We','Th','Fr','Sa','Su'];
   var calEl=$('cal'), mi=0, today0=new Date();
+  var TOTAL=Math.max(3,(2027-today0.getFullYear())*12+(11-today0.getMonth())+1);
   function renderCal(){
     var tom=new Date(); tom.setHours(0,0,0,0); tom.setDate(tom.getDate()+1);
     calEl.textContent='';
-    var tabs=document.createElement('div'); tabs.className='caltabs';
-    for(var k=0;k<3;k++){(function(k){
-      var m=new Date(today0.getFullYear(),today0.getMonth()+k,1);
-      var b=document.createElement('button'); b.type='button'; b.className='chip';
-      b.textContent=MN[m.getMonth()].slice(0,3)+' '+m.getFullYear();
-      b.setAttribute('aria-pressed',String(k===mi));
-      b.addEventListener('click',function(){mi=k;renderCal()});
-      tabs.appendChild(b);
-    })(k)}
-    calEl.appendChild(tabs);
+    var nav=document.createElement('div'); nav.className='calnav';
+    var prev=document.createElement('button'); prev.type='button'; prev.textContent='\u2039'; prev.setAttribute('aria-label','Previous month'); prev.disabled=mi===0;
+    var next=document.createElement('button'); next.type='button'; next.textContent='\u203A'; next.setAttribute('aria-label','Next month'); next.disabled=mi===TOTAL-1;
+    var sel=document.createElement('select'); sel.setAttribute('aria-label','Month');
+    for(var k=0;k<TOTAL;k++){
+      var mo=new Date(today0.getFullYear(),today0.getMonth()+k,1);
+      var op=document.createElement('option'); op.value=k; op.textContent=MN[mo.getMonth()]+' '+mo.getFullYear(); sel.appendChild(op);
+    }
+    sel.value=String(mi);
+    prev.addEventListener('click',function(){mi--;renderCal()});
+    next.addEventListener('click',function(){mi++;renderCal()});
+    sel.addEventListener('change',function(){mi=+sel.value;renderCal()});
+    nav.appendChild(prev); nav.appendChild(sel); nav.appendChild(next);
+    calEl.appendChild(nav);
     var first=new Date(today0.getFullYear(),today0.getMonth()+mi,1);
     var dim=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
     var grid=document.createElement('div'); grid.className='calgrid';
